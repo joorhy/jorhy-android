@@ -29,7 +29,10 @@ public class LoginActivity extends Activity {
                     Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                     startActivity(intent);
                 } else {
-                    new LoginRequest().execute("http://");
+                    EditText txtUser=(EditText) findViewById(R.id.login_user_input);
+		      EditText txtPassword=(EditText) findViewById(R.id.login_password_input);
+		      String httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + txtPassword.getText().toString();
+                    new LoginRequest().execute(httpRequest) ;
                 }
             }
         });
@@ -48,9 +51,11 @@ public class LoginActivity extends Activity {
 
             try {
                 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-                String strResult = jsonObject.getString("");
-                if (strResult == "") {
+                String strResult = jsonObject.getString("State");
+                if (strResult == "0") {
+		      String strUserID = jsonObject.getString("UserID");
                     Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
+		      intent.putExtra("UserID", strUserID);
                     startActivity(intent);
                 }
 

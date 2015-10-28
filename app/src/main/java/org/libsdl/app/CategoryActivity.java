@@ -20,15 +20,31 @@ import android.widget.TextView;
 
 public class CategoryActivity extends Activity {
     private ListView treeListView;
+    private String userID;
+    private String departmentID;
+    private ArrayList<TreeNode> treeNodes = new ArrayList<TreeNode>();
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
-        DataRequest dataRequest = new DataRequest();
-        ArrayList<TreeNode> treeNodes = dataRequest.getTreeNodes();
-        if (!Configer.UseTemp()) {
-            dataRequest.execute("http://");
+        if (Configer.UseTemp()) {
+		TempDataRequest tempDataRequest = new TempDataRequest();
+		treeNodes = tempDataRequest.getTreeNodes();
+        } else {
+	     UserInfoRequest userInfoRequest = new UserInfoRequest();
+	     String strUserInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetUserByID?userID=" + userID;
+            userInfoRequest.execute(httpRequest);
+
+	     VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
+	     String strVehicleInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
+	     vehicleInfoRequest.execute(strVehicleInfoRequest);
+
+	     /*for (int i=0; i<treeNodes.size(); i++) {
+	         ChannelInfoRequest channelInfoRequest = new ChannelInfoRequest();
+                String strChannelInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
+	     }*/
         }
 
         TreeViewAdapter adapter = new TreeViewAdapter(this, treeNodes);
@@ -182,7 +198,89 @@ public class CategoryActivity extends Activity {
         }
     }
 
-    class DataRequest extends AsyncTask<Object, Object, Object> {
+    class UserInfoRequest extends AsyncTask<Object, Object, Object> {
+        @Override
+        protected Object doInBackground(Object... objects) {
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object result) {
+            super.onPostExecute(result);
+	     try {
+		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+               departmentID = jsonObject.getString("DepartmentID");
+	        
+	     } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class VehicleInfoRequest extends AsyncTask<Object, Object, Object> {
+        @Override
+        protected Object doInBackground(Object... objects) {
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object result) {
+            super.onPostExecute(result);
+	     try {
+		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
+		 for (int i = 0; i < vehicleArray.length(); i++) {  
+		 	JSONObject item = contentArray.getJSONObject(i);
+		 	String strTitle = item.getString("Name"); 
+		 	TreeNode parentNode = new TreeNode(strTitle);
+			parentNode.setHasParent(false);
+                     parentNode.setIsDirectory(true);
+                     parentNode.setLevel(0);
+                     parentNode.setHasChild(true);
+			for (int j = 0; j < 8; j++) {
+                        TreeNode childNode = new TreeNode(Integer.toString(j));
+                        childNode.setHasChild(true);
+                        childNode.setIsDirectory(false);
+                        childNode.setLevel(1);
+                        childNode.setHasChild(false);
+                        parentNode.addChild(childNode);
+                    }
+                    treeNodes.add(parentNode);
+		 }
+	     } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class ChannelInfoRequest extends AsyncTask<Object, Object, Object> {
+        @Override
+        protected Object doInBackground(Object... objects) {
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object result) {
+            super.onPostExecute(result);
+	     try {
+		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
+		 for (int i = 0; i < vehicleArray.length(); i++) {  
+		 	JSONObject item = contentArray.getJSONObject(i);
+		 	String strTitle = item.getString("Name"); 
+		 	TreeNode parentNode = new TreeNode(strTitle);
+			parentNode.setHasParent(false);
+                     parentNode.setIsDirectory(true);
+                     parentNode.setLevel(0);
+                     parentNode.setHasChild(true);
+		 }
+	     } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+	
+    class TempDataRequest extends AsyncTask<Object, Object, Object> {
         private ArrayList<TreeNode> treeNodes = new ArrayList<TreeNode>();
 
         public ArrayList<TreeNode> getTreeNodes() {

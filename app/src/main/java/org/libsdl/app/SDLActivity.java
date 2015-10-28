@@ -174,7 +174,7 @@ public class SDLActivity extends Activity {
     public static void handlePause() {
         if (!SDLActivity.mIsPaused && SDLActivity.mIsSurfaceReady) {
             SDLActivity.mIsPaused = true;
-            SDLActivity.stopPlay();
+            SDLActivity.nativeStopPlay();
             SDLActivity.nativePause();
             mSurface.enableSensor(Sensor.TYPE_ACCELEROMETER, false);
         }
@@ -188,15 +188,15 @@ public class SDLActivity extends Activity {
         if (SDLActivity.mIsPaused && SDLActivity.mIsSurfaceReady && SDLActivity.mHasFocus) {
             SDLActivity.mIsPaused = false;
             SDLActivity.nativeResume();
-            SDLActivity.startPlay();
+            SDLActivity.nativeStartPlay();
             mSurface.enableSensor(Sensor.TYPE_ACCELEROMETER, true);
         }
     }
         
     /* The native thread has finished */
     public static void handleNativeExit() {
+    	 SDLActivity.nativeExitPlay();
         SDLActivity.mSDLThread = null;
-        SDLActivity.exitPlay();
         mSingleton.finish();
     }
 
@@ -271,9 +271,9 @@ public class SDLActivity extends Activity {
 
     // C functions we call
     public static native void nativeInit(String parm);
-    public static native void startPlay();
-    public static native void stopPlay();
-    public static native void exitPlay();
+    public static native void nativeStartPlay();
+    public static native void nativeStopPlay();
+    public static native void nativeExitPlay();
     public static native void nativeLowMemory();
     public static native void nativeQuit();
     public static native void nativePause();
@@ -509,6 +509,7 @@ class SDLMain implements Runnable {
     public void run() {
         // Runs SDL_main()
         SDLActivity.nativeInit("222.214.218.237,6601,14184,0,14184,1");
+	 SDLActivity.nativeStartPlay();
 
         //Log.v("SDL", "SDL thread terminated");
     }
