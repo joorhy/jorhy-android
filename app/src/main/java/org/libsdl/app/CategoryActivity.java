@@ -17,6 +17,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 public class CategoryActivity extends Activity {
     private ListView treeListView;
@@ -30,12 +33,12 @@ public class CategoryActivity extends Activity {
         setContentView(R.layout.activity_category);
 
         if (Configer.UseTemp()) {
-		TempDataRequest tempDataRequest = new TempDataRequest();
-		treeNodes = tempDataRequest.getTreeNodes();
+            TempDataRequest tempDataRequest = new TempDataRequest();
+            treeNodes = tempDataRequest.getTreeNodes();
         } else {
 	     UserInfoRequest userInfoRequest = new UserInfoRequest();
 	     String strUserInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetUserByID?userID=" + userID;
-            userInfoRequest.execute(httpRequest);
+         userInfoRequest.execute(strUserInfoRequest);
 
 	     VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
 	     String strVehicleInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
@@ -56,6 +59,7 @@ public class CategoryActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(CategoryActivity.this,SDLActivity.class);
+                intent.putExtra("videoUrl", "222.214.218.237,6601,14189,0,14186,1");
                 startActivity(intent);
             }
         });
@@ -208,8 +212,8 @@ public class CategoryActivity extends Activity {
         protected void onPostExecute(Object result) {
             super.onPostExecute(result);
 	     try {
-		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-               departmentID = jsonObject.getString("DepartmentID");
+            JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+            departmentID = jsonObject.getString("DepartmentID");
 	        
 	     } catch (JSONException e) {
                 e.printStackTrace();
@@ -230,7 +234,7 @@ public class CategoryActivity extends Activity {
 		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
 		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
 		 for (int i = 0; i < vehicleArray.length(); i++) {  
-		 	JSONObject item = contentArray.getJSONObject(i);
+		 	JSONObject item = vehicleArray.getJSONObject(i);
 		 	String strTitle = item.getString("Name"); 
 		 	TreeNode parentNode = new TreeNode(strTitle);
 			parentNode.setHasParent(false);
@@ -266,7 +270,7 @@ public class CategoryActivity extends Activity {
 		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
 		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
 		 for (int i = 0; i < vehicleArray.length(); i++) {  
-		 	JSONObject item = contentArray.getJSONObject(i);
+		 	JSONObject item = vehicleArray.getJSONObject(i);
 		 	String strTitle = item.getString("Name"); 
 		 	TreeNode parentNode = new TreeNode(strTitle);
 			parentNode.setHasParent(false);

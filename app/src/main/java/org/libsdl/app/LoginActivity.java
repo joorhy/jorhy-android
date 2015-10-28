@@ -1,18 +1,17 @@
 package org.libsdl.app;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
+import android.os.*;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
+import android.widget.EditText;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.InputStream;
 
 public class LoginActivity extends Activity {
 
@@ -29,10 +28,34 @@ public class LoginActivity extends Activity {
                     Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                     startActivity(intent);
                 } else {
-                    EditText txtUser=(EditText) findViewById(R.id.login_user_input);
-		      EditText txtPassword=(EditText) findViewById(R.id.login_password_input);
-		      String httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + txtPassword.getText().toString();
-                    new LoginRequest().execute(httpRequest) ;
+                    new Thread (new Runnable () {
+                        @Override
+                        public void run() {
+                            EditText txtUser = (EditText) findViewById(R.id.username_edit);
+                            EditText txtPassword = (EditText) findViewById(R.id.password_edit);
+                            String httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + txtPassword.getText().toString();
+                            //new LoginRequest().execute(httpRequest) ;
+                            HttpURLConnection urlConnection = null;
+                            try {
+                                URL url = new URL(httpRequest);
+                                urlConnection = (HttpURLConnection) url.openConnection();
+                                urlConnection.setRequestMethod("GET");
+                                int responseCode = urlConnection.getResponseCode();
+                                if (responseCode == 200) {
+                                    InputStream input = urlConnection.getInputStream();
+                                    if (input != null) {
+                                        //拿到流后处理
+                                        String result = input.toString();
+                                        Log.i("", result);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            } finally {
+                                urlConnection.disconnect();
+                            }
+                        }
+                    }).start();
                 }
             }
         });
@@ -41,7 +64,6 @@ public class LoginActivity extends Activity {
     class LoginRequest extends AsyncTask<Object, Object, Object> {
         @Override
         protected Object doInBackground(Object... params) {
-
             return null;
         }
 
@@ -50,13 +72,14 @@ public class LoginActivity extends Activity {
             super.onPostExecute(result);
 
             try {
-                JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-                String strResult = jsonObject.getString("State");
-                if (strResult == "0") {
-		      String strUserID = jsonObject.getString("UserID");
-                    Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
-		      intent.putExtra("UserID", strUserID);
-                    startActivity(intent);
+                    String s = result.toString();
+                    JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+                    String strResult = jsonObject.getString("State");
+                    if (strResult == "0") {
+                        String strUserID = jsonObject.getString("UserID");
+                        Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
+                        intent.putExtra("UserID", strUserID);
+                        startActivity(intent);
                 }
 
             } catch (JSONException e) {

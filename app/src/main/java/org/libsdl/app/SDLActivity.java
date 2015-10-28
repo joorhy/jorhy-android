@@ -40,7 +40,7 @@ public class SDLActivity extends Activity {
 
     // This is what SDL runs in. It invokes SDL_main(), eventually
     protected static Thread mSDLThread;
-    
+    protected static String mVideoUrl;
     // Audio
     protected static AudioTrack mAudioTrack;
 
@@ -73,9 +73,11 @@ public class SDLActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("SDL", "onCreate():" + mSingleton);
         super.onCreate(savedInstanceState);
-        
+
+        SDLActivity.mVideoUrl = this.getIntent().getExtras().getString("videoUrl");
+        Log.v("SDL", "this.getIntent().getExtras():" + mVideoUrl);
         SDLActivity.initialize();
-        // So we can call stuff from static callbacks
+        // So we can call stuff from static callbacksa
         mSingleton = this;
 
         // Set up the surface
@@ -163,6 +165,9 @@ public class SDLActivity extends Activity {
             keyCode == 169 /* API 11: KeyEvent.KEYCODE_ZOOM_OUT */
             ) {
             return false;
+        }
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            this.finish();
         }
         return super.dispatchKeyEvent(event);
     }
@@ -508,9 +513,7 @@ class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-        SDLActivity.nativeInit("222.214.218.237,6601,14184,0,14184,1");
-	 SDLActivity.nativeStartPlay();
-
+        SDLActivity.nativeInit(SDLActivity.mVideoUrl);
         //Log.v("SDL", "SDL thread terminated");
     }
 }
@@ -640,11 +643,15 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         if (SDLActivity.mSDLThread == null) {
             // This is the entry point to the C app.
             // Start up the C app thread and enable sensor input for the first time
+            try {
+                SDLActivity.mSDLThread = new Thread(new SDLMain(), "SDLThread");
+                enableSensor(Sensor.TYPE_ACCELEROMETER, true);
+                SDLActivity.mSDLThread.start();
+                Thread.sleep(1000);
+                SDLActivity.nativeStartPlay();
+            } catch (Exception e) {
 
-            SDLActivity.mSDLThread = new Thread(new SDLMain(), "SDLThread");
-            enableSensor(Sensor.TYPE_ACCELEROMETER, true);
-            SDLActivity.mSDLThread.start();
-            
+            }
             // Set up a listener thread to catch when the native thread ends
             new Thread(new Runnable(){
                 @Override
