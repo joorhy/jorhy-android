@@ -12,6 +12,8 @@ import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.InputStream;
+import org.xmlpull.v1.XmlPullParser;
+import android.util.Xml;
 
 public class LoginActivity extends Activity {
 
@@ -44,9 +46,35 @@ public class LoginActivity extends Activity {
                                 if (responseCode == 200) {
                                     InputStream input = urlConnection.getInputStream();
                                     if (input != null) {
+                                        XmlPullParser parser = Xml.newPullParser(); //由android.util.Xml创建一个XmlPullParser实例
+                                        parser.setInput(input, "UTF-8");
+                                        int eventType = parser.getEventType();
+                                        while (eventType != XmlPullParser.END_DOCUMENT) {
+                                            switch (eventType) {
+                                                case XmlPullParser.START_DOCUMENT:
+                                                    break;
+                                                case XmlPullParser.START_TAG:
+                                                    if (parser.getName().equals("string")) {
+                                                        eventType = parser.next();
+                                                        String result = parser.getText();
+                                                        Log.i("", result);
+                                                    }
+                                                    break;
+                                                case XmlPullParser.END_TAG:
+                                                    break;
+                                            }
+                                            eventType = parser.next();
+                                        }
                                         //拿到流后处理
-                                        String result = input.toString();
-                                        Log.i("", result);
+                                        /*StringBuffer out = new StringBuffer();
+                                        byte[] b = new byte[4096];
+                                        for (int n; (n  = input.read(b)) != -1;) {
+                                            out.append(new String(b,0,n));
+                                        }
+                                        String result = out.toString();
+                                        JSONObject jsonObject = new JSONObject(result).getJSONObject("parent");
+                                        String strResult = jsonObject.getString("State");
+                                        Log.i("", result);*/
                                     }
                                 }
                             } catch (Exception e) {
