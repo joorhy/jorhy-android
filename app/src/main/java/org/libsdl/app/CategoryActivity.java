@@ -31,11 +31,18 @@ import org.json.JSONTokener;
 import org.xmlpull.v1.XmlPullParser;
 
 public class CategoryActivity extends Activity {
+    private static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
     private ListView treeListView;
-    private String userID;
-    private String departmentID;
     private ArrayList<TreeNode> treeNodes = new ArrayList<TreeNode>();
-	
+    private String strUserID;
+    private String strDepartmentID;
+
+    private String strUserInfoRequest;
+    private UserInfoRequest userInfoRequest;
+
+    private String strVehicleInfoRequest;
+    private VehicleInfoRequest vehicleInfoRequest;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,61 +52,11 @@ public class CategoryActivity extends Activity {
             TempDataRequest tempDataRequest = new TempDataRequest();
             treeNodes = tempDataRequest.getTreeNodes();
         } else {
-            new Thread (new Runnable () {
-                @Override
-                public void run() {
-                    String strUserInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=43&recursion=true";
-                    //new LoginRequest().execute(httpRequest) ;
-                    HttpURLConnection urlConnection = null;
-                    try {
-                        URL url = new URL(strUserInfoRequest);
-                        urlConnection = (HttpURLConnection) url.openConnection();
-                        urlConnection.setRequestMethod("GET");
-                        int responseCode = urlConnection.getResponseCode();
-                        if (responseCode == 200) {
-                            InputStream input = urlConnection.getInputStream();
-                            if (input != null) {
-                                XmlPullParser parser = Xml.newPullParser(); //由android.util.Xml创建一个XmlPullParser实例
-                                parser.setInput(input, "UTF-8");
-                                int eventType = parser.getEventType();
-                                while (eventType != XmlPullParser.END_DOCUMENT) {
-                                    switch (eventType) {
-                                        case XmlPullParser.START_DOCUMENT:
-                                            break;
-                                        case XmlPullParser.START_TAG:
-                                            if (parser.getName().equals("string")) {
-                                                eventType = parser.next();
-                                                String result = parser.getText();
-                                                Log.i("", result);
+            strUserInfoRequest = HOST + "GetUserByID?userID=" + strUserID;
+            userInfoRequest = new UserInfoRequest();
+            userInfoRequest.execute(strUserInfoRequest);
 
-                                                JSONArray jsonArray = new JSONArray(result);
-                                                for (int i=0;i<jsonArray.length();i++) {
-                                                    JSONObject jsonObject5 = (JSONObject)jsonArray.opt(i);
-                                                    String tpstr = jsonObject5.getString("DepartmentName");
-                                                    Log.i("", result);
-                                                }
-                                            }
-                                            break;
-                                        case XmlPullParser.END_TAG:
-                                            break;
-                                    }
-                                    eventType = parser.next();
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        urlConnection.disconnect();
-                    }
-                }
-            }).start();
-
-	     /*VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
-	     String strVehicleInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
-	     vehicleInfoRequest.execute(strVehicleInfoRequest);
-
-	     for (int i=0; i<treeNodes.size(); i++) {
+	     /*for (int i=0; i<treeNodes.size(); i++) {
 	         ChannelInfoRequest channelInfoRequest = new ChannelInfoRequest();
                 String strChannelInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
 	     }*/
@@ -257,46 +214,125 @@ public class CategoryActivity extends Activity {
         }
     }
 
-    class UserInfoRequest extends AsyncTask<Object, Object, Object> {
+    class UserInfoRequest extends AsyncTask<String, Integer, String> {
         @Override
-        protected Object doInBackground(Object... objects) {
+        protected String doInBackground(String... params) {
+            HttpURLConnection urlConnection = null;
+            try {
+                URL url = new URL(params[0]);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == 200) {
+                    InputStream input = urlConnection.getInputStream();
+                    if (input != null) {
+                        XmlPullParser parser = Xml.newPullParser();
+                        parser.setInput(input, "UTF-8");
+                        int eventType = parser.getEventType();
+                        while (eventType != XmlPullParser.END_DOCUMENT) {
+                            switch (eventType) {
+                                case XmlPullParser.START_DOCUMENT:
+                                    break;
+                                case XmlPullParser.START_TAG:
+                                    if (parser.getName().equals("string")) {
+                                        eventType = parser.next();
+                                        String result = parser.getText();
+                                        Log.i("", result);
+                                        return result;
+                                    }
+                                    break;
+                                case XmlPullParser.END_TAG:
+                                    break;
+                            }
+                            eventType = parser.next();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                urlConnection.disconnect();
+            }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Object result) {
+        protected void onPostExecute(String result) {
             super.onPostExecute(result);
-	     try {
-            JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-            departmentID = jsonObject.getString("DepartmentID");
-	        
-	     } catch (JSONException e) {
-                e.printStackTrace();
+            if (result != null) {
+                try {
+                    JSONTokener jsonParser = new JSONTokener(result);
+                    JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
+                    strDepartmentID = jsonObject.getString("DepartmentID");
+                    Log.i("", strDepartmentID);
+
+                    strVehicleInfoRequest = HOST + "GetVehicleListByDeptID?deptID="
+                            + strDepartmentID + "&recursion=false";
+                    vehicleInfoRequest = new VehicleInfoRequest();
+                    vehicleInfoRequest.execute(strVehicleInfoRequest);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    class VehicleInfoRequest extends AsyncTask<Object, Object, Object> {
+    class VehicleInfoRequest extends AsyncTask<String, Integer, String> {
         @Override
-        protected Object doInBackground(Object... objects) {
+        protected String doInBackground(String... params) {
+            HttpURLConnection urlConnection = null;
+            try {
+                URL url = new URL(params[0]);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == 200) {
+                    InputStream input = urlConnection.getInputStream();
+                    if (input != null) {
+                        XmlPullParser parser = Xml.newPullParser();
+                        parser.setInput(input, "UTF-8");
+                        int eventType = parser.getEventType();
+                        while (eventType != XmlPullParser.END_DOCUMENT) {
+                            switch (eventType) {
+                                case XmlPullParser.START_DOCUMENT:
+                                    break;
+                                case XmlPullParser.START_TAG:
+                                    if (parser.getName().equals("string")) {
+                                        eventType = parser.next();
+                                        String result = parser.getText();
+                                        Log.i("", result);
+                                        return result;
+                                    }
+                                    break;
+                                case XmlPullParser.END_TAG:
+                                    break;
+                            }
+                            eventType = parser.next();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                urlConnection.disconnect();
+            }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Object result) {
+        protected void onPostExecute(String result) {
             super.onPostExecute(result);
-	     try {
-		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
-		 for (int i = 0; i < vehicleArray.length(); i++) {  
-		 	JSONObject item = vehicleArray.getJSONObject(i);
-		 	String strTitle = item.getString("Name"); 
-		 	TreeNode parentNode = new TreeNode(strTitle);
-			parentNode.setHasParent(false);
-                     parentNode.setIsDirectory(true);
-                     parentNode.setLevel(0);
-                     parentNode.setHasChild(true);
-			for (int j = 0; j < 8; j++) {
+            try {
+                JSONArray vehicleArray = new JSONArray(result);
+                for (int i = 0; i < vehicleArray.length(); i++) {
+                    JSONObject item = (JSONObject)vehicleArray.opt(i);
+                    String strTitle = item.getString("Name");
+                    TreeNode parentNode = new TreeNode(strTitle);
+                    parentNode.setHasParent(false);
+                    parentNode.setIsDirectory(true);
+                    parentNode.setLevel(0);
+                    parentNode.setHasChild(true);
+                    for (int j = 0; j < 8; j++) {
                         TreeNode childNode = new TreeNode(Integer.toString(j));
                         childNode.setHasChild(true);
                         childNode.setIsDirectory(false);
@@ -305,8 +341,8 @@ public class CategoryActivity extends Activity {
                         parentNode.addChild(childNode);
                     }
                     treeNodes.add(parentNode);
-		 }
-	     } catch (JSONException e) {
+                }
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
@@ -324,9 +360,9 @@ public class CategoryActivity extends Activity {
 	     try {
 		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
 		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
-		 for (int i = 0; i < vehicleArray.length(); i++) {  
+		 for (int i = 0; i < vehicleArray.length(); i++) {
 		 	JSONObject item = vehicleArray.getJSONObject(i);
-		 	String strTitle = item.getString("Name"); 
+		 	String strTitle = item.getString("Name");
 		 	TreeNode parentNode = new TreeNode(strTitle);
 			parentNode.setHasParent(false);
                      parentNode.setIsDirectory(true);

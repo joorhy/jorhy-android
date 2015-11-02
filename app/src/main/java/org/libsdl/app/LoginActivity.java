@@ -19,127 +19,118 @@ import org.xmlpull.v1.XmlPullParser;
 import android.util.Xml;
 
 public class LoginActivity extends Activity {
-
+    private static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
+    private LoginRequest loginRequest;
+    private String httpRequest;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         Button btn = (Button)findViewById(R.id.sign_in_button);
-        btn.setOnClickListener(new Button.OnClickListener() {
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
                 if (Configer.UseTemp()) {
                     Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                     startActivity(intent);
                 } else {
-                    new Thread (new Runnable () {
-                        @Override
-                        public void run() {
-                            String httpRequest = null;
-                            EditText txtUser = (EditText) findViewById(R.id.username_edit);
-                            EditText txtPassword = (EditText) findViewById(R.id.password_edit);
-                            String strPassword = txtPassword.getText().toString();
-                            byte[] hash;
-                            try {
-                                hash = MessageDigest.getInstance("MD5").digest(strPassword.getBytes());
-                                StringBuilder hex = new StringBuilder(hash.length * 2);
-                                for (byte b : hash) {
-                                    if ((b & 0xFF) < 0x10)
-                                        hex.append("0");
-                                    hex.append(Integer.toHexString(b & 0xFF));
-                                }
-
-                                httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + hex.toString();;
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-
-                            //new LoginRequest().execute(httpRequest) ;
-                            HttpURLConnection urlConnection = null;
-                            try {
-                                URL url = new URL(httpRequest);
-                                urlConnection = (HttpURLConnection) url.openConnection();
-                                urlConnection.setRequestMethod("GET");
-                                int responseCode = urlConnection.getResponseCode();
-                                if (responseCode == 200) {
-                                    InputStream input = urlConnection.getInputStream();
-                                    if (input != null) {
-                                        XmlPullParser parser = Xml.newPullParser(); //由android.util.Xml创建一个XmlPullParser实例
-                                        parser.setInput(input, "UTF-8");
-                                        int eventType = parser.getEventType();
-                                        while (eventType != XmlPullParser.END_DOCUMENT) {
-                                            switch (eventType) {
-                                                case XmlPullParser.START_DOCUMENT:
-                                                    break;
-                                                case XmlPullParser.START_TAG:
-                                                    if (parser.getName().equals("string")) {
-                                                        eventType = parser.next();
-                                                        String result = parser.getText();
-                                                        Log.i("", result);
-
-                                                        JSONTokener jsonParser = new JSONTokener(result);
-                                                        JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
-                                                        String strResult = jsonObject.getString("State");
-                                                        Log.i("", result);
-                                                        if (strResult == "0") {
-                                                            String strUserID = jsonObject.getString("UserID");
-                                                            Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
-                                                            intent.putExtra("UserID", strUserID);
-                                                            startActivity(intent);
-                                                        }
-                                                    }
-                                                    break;
-                                                case XmlPullParser.END_TAG:
-                                                    break;
-                                            }
-                                            eventType = parser.next();
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                urlConnection.disconnect();
-                            }
+                    EditText txtUser = (EditText) findViewById(R.id.username_edit);
+                    EditText txtPassword = (EditText) findViewById(R.id.password_edit);
+                    String strPassword = txtPassword.getText().toString();
+                    byte[] hash;
+                    try {
+                        hash = MessageDigest.getInstance("MD5").digest(strPassword.getBytes());
+                        StringBuilder hex = new StringBuilder(hash.length * 2);
+                        for (byte b : hash) {
+                            if ((b & 0xFF) < 0x10)
+                                hex.append("0");
+                            hex.append(Integer.toHexString(b & 0xFF));
                         }
-                    }).start();
+                        httpRequest = HOST + "Login?Account=" + txtUser.getText().toString()
+                                + "&pwd=" + hex.toString();
+                        loginRequest = new LoginRequest();
+                        loginRequest.execute(httpRequest);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
     }
 
-    class LoginRequest extends AsyncTask<Object, Object, Object> {
+    class LoginRequest extends AsyncTask<String, Integer, String> {
         @Override
-        protected Object doInBackground(Object... params) {
+        protected void onPreExecute() {
+            Button btn = (Button)findViewById(R.id.sign_in_button);
+            btn.setEnabled(false);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            HttpURLConnection urlConnection = null;
+            try {
+                URL url = new URL(params[0]);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == 200) {
+                    InputStream input = urlConnection.getInputStream();
+                    if (input != null) {
+                        XmlPullParser parser = Xml.newPullParser();
+                        parser.setInput(input, "UTF-8");
+                        int eventType = parser.getEventType();
+                        while (eventType != XmlPullParser.END_DOCUMENT) {
+                            switch (eventType) {
+                                case XmlPullParser.START_DOCUMENT:
+                                    break;
+                                case XmlPullParser.START_TAG:
+                                    if (parser.getName().equals("string")) {
+                                        eventType = parser.next();
+                                        String result = parser.getText();
+                                        Log.i("", result);
+                                    }
+                                    break;
+                                case XmlPullParser.END_TAG:
+                                    break;
+                            }
+                            eventType = parser.next();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                urlConnection.disconnect();
+            }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Object result) {
+        protected void onProgressUpdate(Integer... progresses) {
+            Log.i("", "onProgressUpdate(Progress... progresses) called");
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
             super.onPostExecute(result);
 
-            try {
-                    String s = result.toString();
-                    JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+            if (result != null) {
+                try {
+                    JSONTokener jsonParser = new JSONTokener(result);
+                    JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
                     String strResult = jsonObject.getString("State");
+                    Log.i("", result);
                     if (strResult == "0") {
                         String strUserID = jsonObject.getString("UserID");
                         Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                         intent.putExtra("UserID", strUserID);
                         startActivity(intent);
                     }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
-
-        @Override
-        protected void onPreExecute() {
-            Button btn = (Button)findViewById(R.id.sign_in_button);
-            btn.setEnabled(false);
         }
     }
 }
