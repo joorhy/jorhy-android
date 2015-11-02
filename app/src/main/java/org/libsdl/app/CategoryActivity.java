@@ -6,7 +6,6 @@ package org.libsdl.app;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
@@ -19,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -34,7 +32,10 @@ public class CategoryActivity extends Activity {
     private static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
     private ListView treeListView;
     private ArrayList<TreeNode> treeNodes = new ArrayList<TreeNode>();
+
     private String strUserID;
+    private String strCookies;
+
     private String strDepartmentID;
 
     private String strUserInfoRequest;
@@ -52,6 +53,8 @@ public class CategoryActivity extends Activity {
             TempDataRequest tempDataRequest = new TempDataRequest();
             treeNodes = tempDataRequest.getTreeNodes();
         } else {
+            strUserID = getIntent().getStringExtra("UserID");
+            strCookies = getIntent().getStringExtra("Cookies");
             strUserInfoRequest = HOST + "GetUserByID?userID=" + strUserID;
             userInfoRequest = new UserInfoRequest();
             userInfoRequest.execute(strUserInfoRequest);
@@ -61,10 +64,6 @@ public class CategoryActivity extends Activity {
                 String strChannelInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
 	     }*/
         }
-
-        TreeViewAdapter adapter = new TreeViewAdapter(this, treeNodes);
-        treeListView = (ListView) this.findViewById(R.id.tree_list);
-        treeListView.setAdapter(adapter);
 
         Button btnPlay = (Button)findViewById(R.id.play_btn);
         btnPlay.setOnClickListener(new Button.OnClickListener() {
@@ -216,12 +215,18 @@ public class CategoryActivity extends Activity {
 
     class UserInfoRequest extends AsyncTask<String, Integer, String> {
         @Override
+        protected void onPreExecute() {
+            Log.i("", "onPreExecute() called");
+        }
+
+        @Override
         protected String doInBackground(String... params) {
             HttpURLConnection urlConnection = null;
             try {
                 URL url = new URL(params[0]);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
+                urlConnection.setRequestProperty("Cookie", strCookies);
                 int responseCode = urlConnection.getResponseCode();
                 if (responseCode == 200) {
                     InputStream input = urlConnection.getInputStream();
@@ -257,6 +262,11 @@ public class CategoryActivity extends Activity {
         }
 
         @Override
+        protected void onProgressUpdate(Integer... progresses) {
+            Log.i("", "onProgressUpdate(Progress... progresses) called");
+        }
+
+        @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (result != null) {
@@ -285,6 +295,7 @@ public class CategoryActivity extends Activity {
                 URL url = new URL(params[0]);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
+                urlConnection.setRequestProperty("Cookie", strCookies);
                 int responseCode = urlConnection.getResponseCode();
                 if (responseCode == 200) {
                     InputStream input = urlConnection.getInputStream();
@@ -344,6 +355,10 @@ public class CategoryActivity extends Activity {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            } finally {
+                TreeViewAdapter adapter = new TreeViewAdapter(CategoryActivity.this, treeNodes);
+                treeListView = (ListView) CategoryActivity.this.findViewById(R.id.tree_list);
+                treeListView.setAdapter(adapter);
             }
         }
     }
@@ -358,17 +373,17 @@ public class CategoryActivity extends Activity {
         protected void onPostExecute(Object result) {
             super.onPostExecute(result);
 	     try {
-		 JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
-		 JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
-		 for (int i = 0; i < vehicleArray.length(); i++) {
-		 	JSONObject item = vehicleArray.getJSONObject(i);
-		 	String strTitle = item.getString("Name");
-		 	TreeNode parentNode = new TreeNode(strTitle);
-			parentNode.setHasParent(false);
-                     parentNode.setIsDirectory(true);
-                     parentNode.setLevel(0);
-                     parentNode.setHasChild(true);
-		 }
+             JSONObject jsonObject = new JSONObject(result.toString()).getJSONObject("parent");
+             JSONArray vehicleArray = jsonObject.getJSONArray("arrayData");
+             for (int i = 0; i < vehicleArray.length(); i++) {
+                JSONObject item = vehicleArray.getJSONObject(i);
+                String strTitle = item.getString("Name");
+                TreeNode parentNode = new TreeNode(strTitle);
+                parentNode.setHasParent(false);
+                         parentNode.setIsDirectory(true);
+                         parentNode.setLevel(0);
+                         parentNode.setHasChild(true);
+             }
 	     } catch (JSONException e) {
                 e.printStackTrace();
             }

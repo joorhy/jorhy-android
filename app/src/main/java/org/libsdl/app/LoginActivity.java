@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import java.net.HttpURLConnection;
@@ -22,6 +21,7 @@ public class LoginActivity extends Activity {
     private static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
     private LoginRequest loginRequest;
     private String httpRequest;
+    private String strCookies;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +75,11 @@ public class LoginActivity extends Activity {
                 urlConnection.setRequestMethod("GET");
                 int responseCode = urlConnection.getResponseCode();
                 if (responseCode == 200) {
+                    String cookie = urlConnection.getHeaderField("set-cookie");
+                    if(cookie!=null && cookie.length()>0){
+                        strCookies = cookie;
+                    }
+
                     InputStream input = urlConnection.getInputStream();
                     if (input != null) {
                         XmlPullParser parser = Xml.newPullParser();
@@ -89,6 +94,7 @@ public class LoginActivity extends Activity {
                                         eventType = parser.next();
                                         String result = parser.getText();
                                         Log.i("", result);
+                                        return result;
                                     }
                                     break;
                                 case XmlPullParser.END_TAG:
@@ -119,13 +125,15 @@ public class LoginActivity extends Activity {
                 try {
                     JSONTokener jsonParser = new JSONTokener(result);
                     JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
-                    String strResult = jsonObject.getString("State");
-                    Log.i("", result);
-                    if (strResult == "0") {
+                    String strStatus = jsonObject.getString("State");
+                    if (strStatus.equals("0")) {
                         String strUserID = jsonObject.getString("UserID");
                         Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                         intent.putExtra("UserID", strUserID);
+                        intent.putExtra("Cookies", strCookies);
                         startActivity(intent);
+                    } else {
+                        strStatus = "";
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

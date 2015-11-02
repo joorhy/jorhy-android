@@ -31,8 +31,8 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/login_user_input"
             android:singleLine="true"
+            android:text="testa"
             android:inputType="text"/>
-
         <TextView
             android:id="@+id/login_password_input"
             android:layout_width="wrap_content"
@@ -48,6 +48,7 @@
             android:layout_below="@id/login_password_input"
             android:password="true"
             android:singleLine="true"
+            android:text="000000"
             android:inputType="textPassword"
             />
 
