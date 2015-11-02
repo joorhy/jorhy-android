@@ -9,9 +9,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.InputStream;
+import java.security.MessageDigest;
+
 import org.xmlpull.v1.XmlPullParser;
 import android.util.Xml;
 
@@ -33,9 +36,26 @@ public class LoginActivity extends Activity {
                     new Thread (new Runnable () {
                         @Override
                         public void run() {
+                            String httpRequest = null;
                             EditText txtUser = (EditText) findViewById(R.id.username_edit);
                             EditText txtPassword = (EditText) findViewById(R.id.password_edit);
-                            String httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + txtPassword.getText().toString();
+                            String strPassword = txtPassword.getText().toString();
+                            byte[] hash;
+                            try {
+                                hash = MessageDigest.getInstance("MD5").digest(strPassword.getBytes());
+                                StringBuilder hex = new StringBuilder(hash.length * 2);
+                                for (byte b : hash) {
+                                    if ((b & 0xFF) < 0x10)
+                                        hex.append("0");
+                                    hex.append(Integer.toHexString(b & 0xFF));
+                                }
+
+                                httpRequest = "http://222.214.218.237:8059/MobileService.asmx/Login?Account=" + txtUser.getText().toString() + "&pwd=" + hex.toString();;
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+
                             //new LoginRequest().execute(httpRequest) ;
                             HttpURLConnection urlConnection = null;
                             try {
@@ -58,6 +78,17 @@ public class LoginActivity extends Activity {
                                                         eventType = parser.next();
                                                         String result = parser.getText();
                                                         Log.i("", result);
+
+                                                        JSONTokener jsonParser = new JSONTokener(result);
+                                                        JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
+                                                        String strResult = jsonObject.getString("State");
+                                                        Log.i("", result);
+                                                        if (strResult == "0") {
+                                                            String strUserID = jsonObject.getString("UserID");
+                                                            Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
+                                                            intent.putExtra("UserID", strUserID);
+                                                            startActivity(intent);
+                                                        }
                                                     }
                                                     break;
                                                 case XmlPullParser.END_TAG:
@@ -65,16 +96,6 @@ public class LoginActivity extends Activity {
                                             }
                                             eventType = parser.next();
                                         }
-                                        //拿到流后处理
-                                        /*StringBuffer out = new StringBuffer();
-                                        byte[] b = new byte[4096];
-                                        for (int n; (n  = input.read(b)) != -1;) {
-                                            out.append(new String(b,0,n));
-                                        }
-                                        String result = out.toString();
-                                        JSONObject jsonObject = new JSONObject(result).getJSONObject("parent");
-                                        String strResult = jsonObject.getString("State");
-                                        Log.i("", result);*/
                                     }
                                 }
                             } catch (Exception e) {
@@ -108,7 +129,7 @@ public class LoginActivity extends Activity {
                         Intent intent = new Intent(LoginActivity.this, CategoryActivity.class);
                         intent.putExtra("UserID", strUserID);
                         startActivity(intent);
-                }
+                    }
 
             } catch (JSONException e) {
                 e.printStackTrace();

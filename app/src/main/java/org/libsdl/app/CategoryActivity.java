@@ -3,16 +3,23 @@ package org.libsdl.app;
 /**
  * Created by cnjliu on 15-5-21.
  */
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Xml;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -20,6 +27,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONTokener;
+import org.xmlpull.v1.XmlPullParser;
 
 public class CategoryActivity extends Activity {
     private ListView treeListView;
@@ -36,15 +45,61 @@ public class CategoryActivity extends Activity {
             TempDataRequest tempDataRequest = new TempDataRequest();
             treeNodes = tempDataRequest.getTreeNodes();
         } else {
-	     UserInfoRequest userInfoRequest = new UserInfoRequest();
-	     String strUserInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetUserByID?userID=" + userID;
-         userInfoRequest.execute(strUserInfoRequest);
+            new Thread (new Runnable () {
+                @Override
+                public void run() {
+                    String strUserInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=43&recursion=true";
+                    //new LoginRequest().execute(httpRequest) ;
+                    HttpURLConnection urlConnection = null;
+                    try {
+                        URL url = new URL(strUserInfoRequest);
+                        urlConnection = (HttpURLConnection) url.openConnection();
+                        urlConnection.setRequestMethod("GET");
+                        int responseCode = urlConnection.getResponseCode();
+                        if (responseCode == 200) {
+                            InputStream input = urlConnection.getInputStream();
+                            if (input != null) {
+                                XmlPullParser parser = Xml.newPullParser(); //由android.util.Xml创建一个XmlPullParser实例
+                                parser.setInput(input, "UTF-8");
+                                int eventType = parser.getEventType();
+                                while (eventType != XmlPullParser.END_DOCUMENT) {
+                                    switch (eventType) {
+                                        case XmlPullParser.START_DOCUMENT:
+                                            break;
+                                        case XmlPullParser.START_TAG:
+                                            if (parser.getName().equals("string")) {
+                                                eventType = parser.next();
+                                                String result = parser.getText();
+                                                Log.i("", result);
 
-	     VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
+                                                JSONArray jsonArray = new JSONArray(result);
+                                                for (int i=0;i<jsonArray.length();i++) {
+                                                    JSONObject jsonObject5 = (JSONObject)jsonArray.opt(i);
+                                                    String tpstr = jsonObject5.getString("DepartmentName");
+                                                    Log.i("", result);
+                                                }
+                                            }
+                                            break;
+                                        case XmlPullParser.END_TAG:
+                                            break;
+                                    }
+                                    eventType = parser.next();
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        urlConnection.disconnect();
+                    }
+                }
+            }).start();
+
+	     /*VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
 	     String strVehicleInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
 	     vehicleInfoRequest.execute(strVehicleInfoRequest);
 
-	     /*for (int i=0; i<treeNodes.size(); i++) {
+	     for (int i=0; i<treeNodes.size(); i++) {
 	         ChannelInfoRequest channelInfoRequest = new ChannelInfoRequest();
                 String strChannelInfoRequest = "http://222.214.218.237:8059/MobileService.asmx/GetVehicleListByDeptID?deptID=" + departmentID + "&recursion=true";
 	     }*/
