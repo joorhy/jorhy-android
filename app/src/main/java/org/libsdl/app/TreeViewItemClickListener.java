@@ -37,7 +37,7 @@ public class TreeViewItemClickListener implements OnItemClickListener {
             element.setExpanded(true);  
             int i = 1;
             for (Element e : elementsData) {  
-                if (e.getParendId() == element.getId()) {  
+                if (e.getParendId().equals(element.getId())) {
                     e.setExpanded(false);  
                     elements.add(position + i, e);  
                     i ++;  

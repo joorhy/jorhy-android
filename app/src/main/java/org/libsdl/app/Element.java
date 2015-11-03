@@ -3,15 +3,16 @@ package org.libsdl.app;
 public class Element {  
     private String contentText;  
     private int level;  
-    private int id;  
-    private int parendId;  
+    private String id;
+    private String parendId;
     private boolean hasChildren;  
-    private boolean isExpanded;  
+    private boolean isExpanded;
+    private boolean isSelected;
       
-    public static final int NO_PARENT = -1;  
+    public static final String NO_PARENT = "";
     public static final int TOP_LEVEL = 0;  
       
-    public Element(String contentText, int level, int id, int parendId,  
+    public Element(String contentText, int level, String id, String parendId,
             boolean hasChildren, boolean isExpanded) {  
         super();  
         this.contentText = contentText;  
@@ -19,7 +20,8 @@ public class Element {
         this.id = id;  
         this.parendId = parendId;  
         this.hasChildren = hasChildren;  
-        this.isExpanded = isExpanded;  
+        this.isExpanded = isExpanded;
+        this.isSelected = false;
     }  
   
     public boolean isExpanded() {  
@@ -28,8 +30,16 @@ public class Element {
   
     public void setExpanded(boolean isExpanded) {  
         this.isExpanded = isExpanded;  
-    }  
-  
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean isSelected) {
+        this.isSelected = isSelected;
+    }
+
     public String getContentText() {  
         return contentText;  
     }  
@@ -46,22 +56,22 @@ public class Element {
         this.level = level;  
     }  
   
-    public int getId() {  
+    public String getId() {
         return id;  
     }  
   
-    public void setId(int id) {  
+    public void setId(String id) {
         this.id = id;  
     }  
   
-    public int getParendId() {  
+    public String getParendId() {
         return parendId;  
     }  
   
-    public void setParendId(int parendId) {  
+    public void setParendId(String parendId) {
         this.parendId = parendId;  
-    }  
-  
+    }
+
     public boolean isHasChildren() {  
         return hasChildren;  
     }  

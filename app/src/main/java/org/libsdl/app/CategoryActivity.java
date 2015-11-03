@@ -36,21 +36,27 @@ public class CategoryActivity extends Activity {
     public static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
     public static String strCookies;
     private ListView treeListView;
-    private ArrayList<Element> elements;
-    private ArrayList<Element> elementsData;
+    public static ArrayList<Element> elements;
+    public static ArrayList<Element> elementsData;
+    public static TreeViewAdapter treeViewAdapter;
     private String strUserID;
 
-    private VideoInfo videoInfoA = new VideoInfo();
-    private VideoInfo videoInfoB = new VideoInfo();
+    static private VideoInfo videoInfoA = null;
+    static private VideoInfo videoInfoB = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
+        videoInfoA = null;
+        videoInfoB = null;
         if (Configer.UseTemp()) {
             init();
         } else {
+            elements = new ArrayList<Element>();
+            elementsData = new ArrayList<Element>();
+
             strUserID = getIntent().getStringExtra("UserID");
             CategoryActivity.strCookies = getIntent().getStringExtra("Cookies");
             String strRequestURL = HOST + "GetUserByID?userID=" + strUserID;
@@ -60,7 +66,7 @@ public class CategoryActivity extends Activity {
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ListView treeview = (ListView) findViewById(R.id.tree_list);
-        TreeViewAdapter treeViewAdapter = new TreeViewAdapter(elements, elementsData, inflater);
+        treeViewAdapter = new TreeViewAdapter(elements, elementsData, inflater);
         TreeViewItemClickListener treeViewItemClickListener = new TreeViewItemClickListener(treeViewAdapter);
         treeview.setAdapter(treeViewAdapter);
         treeview.setOnItemClickListener(treeViewItemClickListener);
@@ -85,9 +91,9 @@ public class CategoryActivity extends Activity {
     }
 
     private void init() {
-        elements = new ArrayList<Element>();
+        /*elements = new ArrayList<Element>();
         elementsData = new ArrayList<Element>();
-        Element e1 = new Element("1", Element.TOP_LEVEL, 0, Element.NO_PARENT, true, false);
+        Element e1 = new Element("1", Element.TOP_LEVEL, "0", Element.NO_PARENT, true, false);
         Element e2 = new Element("2", Element.TOP_LEVEL + 1, 1, e1.getId(), true, false);
         Element e3 = new Element("3", Element.TOP_LEVEL + 2, 2, e2.getId(), true, false);
         Element e4 = new Element("4", Element.TOP_LEVEL + 3, 3, e3.getId(), false, false);
@@ -119,7 +125,40 @@ public class CategoryActivity extends Activity {
         elementsData.add(e10);
         elementsData.add(e11);
         elementsData.add(e12);
-        elementsData.add(e13);
+        elementsData.add(e13);*/
+    }
+
+    static public boolean AddVideoInfo(String strVehID, String strChaID) {
+        if (videoInfoA == null) {
+            videoInfoA = new VideoInfo();
+            videoInfoA.strVehID = strVehID;
+            videoInfoA.strChaID = strChaID;
+        }
+        else if (videoInfoB == null) {
+            videoInfoB = new VideoInfo();
+            videoInfoB.strVehID = strVehID;
+            videoInfoB.strChaID = strChaID;
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    static public boolean DelVideoInfo(String strVehID, String strChaID) {
+        if (videoInfoA != null
+                && videoInfoA.strVehID.equals(strVehID)
+                && videoInfoA.strChaID.equals(strChaID)) {
+            videoInfoA = null;
+            return true;
+        }
+
+        if (videoInfoB != null
+                && videoInfoB.strVehID.equals(strVehID)
+                && videoInfoB.strChaID.equals(strChaID)) {
+            videoInfoB = null;
+            return true;
+        }
+        return false;
     }
 
     static public String InvokeService(String strURL) {
@@ -163,7 +202,7 @@ public class CategoryActivity extends Activity {
         return null;
     }
 
-    class VideoInfo {
+    static class VideoInfo {
         public String strVehID;
         public String strChaID;
     }
@@ -193,15 +232,16 @@ public class CategoryActivity extends Activity {
                     JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
                     String strDeptntID = jsonObject.getString("DepartmentID");
                     String strDeptName = jsonObject.getString("DepartmentName");
-                    //TreeNode deptNode = new TreeNode(strDeptName);
-                    //CategoryActivity.AddDepartment(strDeptntID, parentNode)
-
+                    Element e1 = new Element(strDeptName, Element.TOP_LEVEL, strDeptntID, Element.NO_PARENT, true, false);
+                    CategoryActivity.elements.add(e1);
                     String strRequestURL = CategoryActivity.HOST + "GetVehicleListByDeptID?deptID="
                             + strDeptntID + "&recursion=false";
                     VehicleInfoRequest vehicleInfoRequest = new VehicleInfoRequest();
                     vehicleInfoRequest.execute(strRequestURL);
                 } catch (Exception e) {
                     e.printStackTrace();
+                } finally {
+                    CategoryActivity.treeViewAdapter.notifyDataSetChanged();
                 }
             }
         }
@@ -223,9 +263,9 @@ public class CategoryActivity extends Activity {
                     String strVehName = item.getString("Name");
                     String strDeptID = item.getString("DepartmentID");
                     String strVehID = item.getString("ID");
-                    //vehMap.put(strVehID, strDeptID);
-                    //TreeNode vehNode = new TreeNode(strVehName);
-                    //CategoryActivity.AddVehicle(strDeptID, strVehID, vehNode)
+                    Element e2 = new Element(strVehName, Element.TOP_LEVEL + 1,
+                            strVehID,strDeptID, true, false);
+                    CategoryActivity.elementsData.add(e2);
 
                     String strRequestURL = CategoryActivity.HOST + "GetChannelByVehicleID?vehicleID=" + strVehID;
                     ChannelInfoRequest channelInfoRequst = new ChannelInfoRequest();
@@ -233,6 +273,8 @@ public class CategoryActivity extends Activity {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            } finally {
+                CategoryActivity.treeViewAdapter.notifyDataSetChanged();
             }
         }
     }
@@ -253,12 +295,13 @@ public class CategoryActivity extends Activity {
                     String strChaName = item.getString("Name");
                     String strChaID = item.getString("Number");
                     String strVehID = item.getString("VehicleID");
-                    //String strDeptID = vehMap.get(strVehID);
-                    //TreeNode chaNode = new TreeNode(strChaName);
-                    //CategoryActivity.AddVehicle(strDeptID, strVehID, chaNode)
+                    Element e3 = new Element(strChaName, Element.TOP_LEVEL + 2,
+                            strChaID,strVehID, false, false);
+                    CategoryActivity.elementsData.add(e3);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                CategoryActivity.treeViewAdapter.notifyDataSetChanged();
             }
         }
     }

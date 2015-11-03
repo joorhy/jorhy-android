@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import android.view.LayoutInflater;  
 import android.view.View;  
 import android.view.ViewGroup;  
-import android.widget.BaseAdapter;  
-import android.widget.ImageView;  
+import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.TextView;  
  
 public class TreeViewAdapter extends BaseAdapter {  
@@ -19,7 +21,7 @@ public class TreeViewAdapter extends BaseAdapter {
         this.elements = elements;  
         this.elementsData = elementsData;  
         this.inflater = inflater;  
-        indentionBase = 50;  
+        indentionBase = 50;
     }  
       
     public ArrayList<Element> getElements() {  
@@ -47,39 +49,61 @@ public class TreeViewAdapter extends BaseAdapter {
   
     @Override  
     public View getView(int position, View convertView, ViewGroup parent) {  
-        ViewHolder holder = null;  
+        ViewHolder holder = null;
         if (convertView == null) {  
-            holder = new ViewHolder();  
-            convertView = inflater.inflate(R.layout.treeview_item, null);  
-            holder.disclosureImg = (ImageView) convertView.findViewById(R.id.disclosureImg);  
+            holder = new ViewHolder();
+            convertView = inflater.inflate(R.layout.treeview_item, null);
+            holder.disclosureImg = (ImageView) convertView.findViewById(R.id.disclosureImg);
+            holder.checkBox = (CheckBox) convertView.findViewById(R.id.item_cb);
             holder.contentText = (TextView) convertView.findViewById(R.id.contentText);  
             convertView.setTag(holder);  
         } else {  
             holder = (ViewHolder) convertView.getTag();  
-        }  
-        Element element = elements.get(position);  
-        int level = element.getLevel();  
-        holder.disclosureImg.setPadding(  
-                indentionBase * (level + 1),   
-                holder.disclosureImg.getPaddingTop(),   
-                holder.disclosureImg.getPaddingRight(),   
-                holder.disclosureImg.getPaddingBottom());  
-        holder.contentText.setText(element.getContentText());  
-        if (element.isHasChildren() && !element.isExpanded()) {  
-            holder.disclosureImg.setImageResource(R.drawable.close);
-            holder.disclosureImg.setVisibility(View.VISIBLE);  
-        } else if (element.isHasChildren() && element.isExpanded()) {  
-            holder.disclosureImg.setImageResource(R.drawable.open);
-            holder.disclosureImg.setVisibility(View.VISIBLE);  
-        } else if (!element.isHasChildren()) {  
-            holder.disclosureImg.setImageResource(R.drawable.close);
-            holder.disclosureImg.setVisibility(View.INVISIBLE);  
-        }  
-        return convertView;  
+        }
+        final Element element = elements.get(position);
+        int level = element.getLevel();
+        holder.disclosureImg.setPadding(
+                indentionBase * (level + 1),
+                holder.disclosureImg.getPaddingTop(),
+                holder.disclosureImg.getPaddingRight(),
+                holder.disclosureImg.getPaddingBottom());
+
+        holder.contentText.setText(element.getContentText());
+        if (element.isHasChildren() && !element.isExpanded()) {
+            //holder.disclosureImg.setImageResource(R.drawable.close);
+            holder.disclosureImg.setVisibility(View.VISIBLE);
+            holder.checkBox.setVisibility(View.INVISIBLE);
+        } else if (element.isHasChildren() && element.isExpanded()) {
+            //holder.disclosureImg.setImageResource(R.drawable.open);
+            holder.disclosureImg.setVisibility(View.VISIBLE);
+            holder.checkBox.setVisibility(View.INVISIBLE);
+        } else if (!element.isHasChildren()) {
+            //holder.disclosureImg.setImageResource(R.drawable.close);
+            holder.disclosureImg.setVisibility(View.INVISIBLE);
+            holder.checkBox.setVisibility(View.VISIBLE);
+        }
+
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // TODO Auto-generated method stub
+                if(isChecked){
+                    if (!CategoryActivity.AddVideoInfo(element.getParendId(), element.getId())) {
+                        buttonView.toggle();
+                    }
+                }else{
+                    if (!CategoryActivity.DelVideoInfo(element.getParendId(), element.getId())) {
+                        buttonView.toggle();
+                    }
+                }
+            }
+        });
+        return convertView;
     }  
       
-    static class ViewHolder{  
-        ImageView disclosureImg;  
-        TextView contentText;  
-    }  
-}  
+    static class ViewHolder{
+        ImageView disclosureImg;
+        CheckBox checkBox;
+        TextView contentText;
+    }
+}

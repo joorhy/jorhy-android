@@ -121,6 +121,9 @@ public class LoginActivity extends Activity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
 
+            Button btn = (Button)findViewById(R.id.sign_in_button);
+            btn.setEnabled(true);
+
             if (result != null) {
                 try {
                     JSONTokener jsonParser = new JSONTokener(result);
