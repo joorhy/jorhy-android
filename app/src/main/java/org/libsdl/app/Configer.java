@@ -5,6 +5,6 @@ package org.libsdl.app;
  */
 public class Configer {
     static public boolean UseTemp() {
-        return false;
+        return true;
     }
 }
