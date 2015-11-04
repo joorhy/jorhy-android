@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,15 +39,15 @@ public class CategoryActivity extends Activity {
     public static ArrayList<Element> elements;
     public static ArrayList<Element> elementsData;
     public static TreeViewAdapter treeViewAdapter;
-    static private VideoInfo videoInfoA = null;
-    static private VideoInfo videoInfoB = null;
-    static private int videoCount = 0;	
+    public static VideoInfo videoInfoA = null;
+    public static VideoInfo videoInfoB = null;
+    public static int videoCount = 0;
 
     private String strUserID;
     private ListView treeListView;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
@@ -77,34 +78,35 @@ public class CategoryActivity extends Activity {
             @Override
             public void onClick(View view) {
                 if (videoInfoA != null) {
-		      videoCount++;			
+                    videoCount++;
                     String strRequestURL = HOST + "GetVehicleByID?ID=" + videoInfoA.strVehID;
-                    DeviceInfoRequest deviceInfoRequest = new VehicleInfoRequest();
+                    DeviceInfoRequest deviceInfoRequest = new DeviceInfoRequest();
                     deviceInfoRequest.execute(strRequestURL);
                 }
 
-		  if (videoInfoB != null) {
-		      videoCount++;	
-		      String strRequestURL = HOST + "GetVehicleByID?ID=" + videoInfoB.strVehID;
-                    DeviceInfoRequest deviceInfoRequest = new VehicleInfoRequest();
+                if (videoInfoB != null) {
+                    videoCount++;
+                    String strRequestURL = HOST + "GetVehicleByID?ID=" + videoInfoB.strVehID;
+                    DeviceInfoRequest deviceInfoRequest = new DeviceInfoRequest();
                     deviceInfoRequest.execute(strRequestURL);
                 }
             }
         });
     }
 
-    @override
+    @Override
     protected void onResume() {
+        super.onResume();
         videoCount = 0;
-	 if (videoInfoA != null) {
-	     videoInfoA.strDevID = null;
-	 }	
+        if (videoInfoA != null) {
+            videoInfoA.strDevID = null;
+        }
 
-	 if (videoInfoB != null) {
-	     videoInfoB.strDevID = null;
-	 }
+        if (videoInfoB != null) {
+            videoInfoB.strDevID = null;
+        }
 
-        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+        if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
     }
@@ -152,8 +154,7 @@ public class CategoryActivity extends Activity {
             videoInfoA = new VideoInfo();
             videoInfoA.strVehID = strVehID;
             videoInfoA.strChaID = strChaID;
-        }
-        else if (videoInfoB == null) {
+        } else if (videoInfoB == null) {
             videoInfoB = new VideoInfo();
             videoInfoB.strVehID = strVehID;
             videoInfoB.strChaID = strChaID;
@@ -224,9 +225,9 @@ public class CategoryActivity extends Activity {
     static class VideoInfo {
         public String strVehID = null;
         public String strChaID = null;
-	 public String strDevID = null;
+        public String strDevID = null;
     }
-}
+
     class UserInfoRequest extends AsyncTask<String, Integer, String> {
         @Override
         protected void onPreExecute() {
@@ -283,8 +284,10 @@ public class CategoryActivity extends Activity {
                     String strVehName = item.getString("Name");
                     String strDeptID = item.getString("DepartmentID");
                     String strVehID = item.getString("ID");
+                    String strState = item.getString("State");
                     Element e2 = new Element(strVehName, Element.TOP_LEVEL + 1,
-                            strVehID,strDeptID, true, false);
+                            strVehID, strDeptID, true, false);
+                    e2.setOnline(strState.equals("1"));
                     CategoryActivity.elementsData.add(e2);
 
                     String strRequestURL = CategoryActivity.HOST + "GetChannelByVehicleID?vehicleID=" + strVehID;
@@ -316,7 +319,7 @@ public class CategoryActivity extends Activity {
                     String strChaID = item.getString("Number");
                     String strVehID = item.getString("VehicleID");
                     Element e3 = new Element(strChaName, Element.TOP_LEVEL + 2,
-                            strChaID,strVehID, false, false);
+                            strChaID, strVehID, false, false);
                     CategoryActivity.elementsData.add(e3);
                 }
             } catch (JSONException e) {
@@ -336,18 +339,17 @@ public class CategoryActivity extends Activity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             try {
-                    JSONTokener jsonParser = new JSONTokener(result);
-                    JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
-		      String strID = jsonObject.getString("ID");			
-                    String strDevID = jsonObject.getString("DevID");
-		      if (CategoryActivity.videoInfoA.strVehID.equlse(strID) && CategoryActivity.videoInfoA.strDevID == null) {
-		          CategoryActivity.videoInfoA.strDevID = strDevID;
-			   CategoryActivity.videoCount--; 	  
-		      }
-		      if (CategoryActivity.videoInfoB.strVehID.equlse(strID) && CategoryActivity.videoInfoB.strDevID == null) {
-		          CategoryActivity.videoInfoB.strDevID = strDevID;
-			   CategoryActivity.videoCount--; 	  
-		      }	  	
+                JSONTokener jsonParser = new JSONTokener(result);
+                JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
+                String strID = jsonObject.getString("ID");
+                String strDevID = jsonObject.getString("DevID");
+                if (CategoryActivity.videoInfoA.strVehID.equals(strID) && CategoryActivity.videoInfoA.strDevID == null) {
+                    CategoryActivity.videoInfoA.strDevID = strDevID;
+                    CategoryActivity.videoCount--;
+                }
+                else if (CategoryActivity.videoInfoB.strVehID.equals(strID) && CategoryActivity.videoInfoB.strDevID == null) {
+                    CategoryActivity.videoInfoB.strDevID = strDevID;
+                    CategoryActivity.videoCount--;
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -356,17 +358,18 @@ public class CategoryActivity extends Activity {
                 if (CategoryActivity.videoCount == 0) {
                     Intent intent = new Intent(CategoryActivity.this, SDLActivity.class);
                     String strVideoURL = "222.214.218.237,6601";
-                    if (videoInfoA.strDevID != null && videoInfoA.strChaID != null) {
-                        strVideoURL += "," + videoInfoA.strDevID + "," + videoInfoA.strChaID;
+                    if (CategoryActivity.videoInfoA.strDevID != null && CategoryActivity.videoInfoA.strChaID != null) {
+                        strVideoURL += "," + CategoryActivity.videoInfoA.strDevID + "," + CategoryActivity.videoInfoA.strChaID;
                     }
-                    if (videoInfoB.strDevID != null && videoInfoB.strChaID != null) {
-                        strVideoURL += "," + videoInfoB.strDevID + "," + videoInfoB.strChaID;
+                    if (CategoryActivity.videoInfoB.strDevID != null && CategoryActivity.videoInfoB.strChaID != null) {
+                        strVideoURL += "," + CategoryActivity.videoInfoB.strDevID + "," + CategoryActivity.videoInfoB.strChaID;
                     }
 
                     intent.putExtra("videoUrl", strVideoURL);
-                    startActivity(intent);	
+                    startActivity(intent);
                 }
-            }	
+            }
         }
     }
+}
 

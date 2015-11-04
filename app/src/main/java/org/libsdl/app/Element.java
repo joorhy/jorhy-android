@@ -8,6 +8,7 @@ public class Element {
     private boolean hasChildren;  
     private boolean isExpanded;
     private boolean isSelected;
+    private boolean isOnline;
       
     public static final String NO_PARENT = "";
     public static final int TOP_LEVEL = 0;  
@@ -22,6 +23,7 @@ public class Element {
         this.hasChildren = hasChildren;  
         this.isExpanded = isExpanded;
         this.isSelected = false;
+        this.isOnline = true;
     }  
   
     public boolean isExpanded() {  
@@ -38,6 +40,14 @@ public class Element {
 
     public void setSelected(boolean isSelected) {
         this.isSelected = isSelected;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(boolean isOnline) {
+        this.isOnline = isOnline;
     }
 
     public String getContentText() {  

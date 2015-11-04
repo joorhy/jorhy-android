@@ -21,7 +21,7 @@ public class TreeViewAdapter extends BaseAdapter {
         this.elements = elements;  
         this.elementsData = elementsData;  
         this.inflater = inflater;  
-        indentionBase = 50;
+        indentionBase = 40;
     }  
       
     public ArrayList<Element> getElements() {  
@@ -63,23 +63,31 @@ public class TreeViewAdapter extends BaseAdapter {
         final Element element = elements.get(position);
         int level = element.getLevel();
         holder.disclosureImg.setPadding(
-                indentionBase * (level + 1),
+                indentionBase * (level),
                 holder.disclosureImg.getPaddingTop(),
                 holder.disclosureImg.getPaddingRight(),
                 holder.disclosureImg.getPaddingBottom());
 
         holder.contentText.setText(element.getContentText());
         if (element.isHasChildren() && !element.isExpanded()) {
-            //holder.disclosureImg.setImageResource(R.drawable.close);
+            if (element.isOnline()) {
+                holder.disclosureImg.setImageResource(R.drawable.close);
+            } else {
+                holder.disclosureImg.setImageResource(R.drawable.offline);
+            }
             holder.disclosureImg.setVisibility(View.VISIBLE);
             holder.checkBox.setVisibility(View.INVISIBLE);
         } else if (element.isHasChildren() && element.isExpanded()) {
-            //holder.disclosureImg.setImageResource(R.drawable.open);
+            if (element.isOnline()) {
+                holder.disclosureImg.setImageResource(R.drawable.open);
+            } else {
+                holder.disclosureImg.setImageResource(R.drawable.offline);
+            }
             holder.disclosureImg.setVisibility(View.VISIBLE);
             holder.checkBox.setVisibility(View.INVISIBLE);
         } else if (!element.isHasChildren()) {
-            //holder.disclosureImg.setImageResource(R.drawable.close);
-            holder.disclosureImg.setVisibility(View.INVISIBLE);
+            holder.disclosureImg.setImageResource(R.drawable.camera);
+            holder.disclosureImg.setVisibility(View.VISIBLE);
             holder.checkBox.setVisibility(View.VISIBLE);
         }
 

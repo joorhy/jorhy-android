@@ -2,6 +2,7 @@ package org.libsdl.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.*;
 import android.util.Log;
 import android.view.View;
@@ -59,9 +60,10 @@ public class LoginActivity extends Activity {
         });
     }
 
-    @override
+    @Override
     protected void onResume() {
-        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+        super.onResume();
+        if(getRequestedOrientation()!= ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
     }

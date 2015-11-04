@@ -33,7 +33,7 @@ public class TreeViewItemClickListener implements OnItemClickListener {
             }  
             elements.removeAll(elementsToDel);  
             treeViewAdapter.notifyDataSetChanged();  
-        } else {  
+        } else if (element.isOnline()){
             element.setExpanded(true);  
             int i = 1;
             for (Element e : elementsData) {  

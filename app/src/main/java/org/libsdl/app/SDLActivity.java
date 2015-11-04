@@ -8,6 +8,7 @@ import java.util.List;
 
 import android.app.*;
 import android.content.*;
+import android.content.pm.ActivityInfo;
 import android.view.*;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
@@ -109,8 +110,8 @@ public class SDLActivity extends Activity {
         Log.v("SDL", "onResume()");
         super.onResume();
 
-        if(getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        if(getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }	
         SDLActivity.handleResume();
     }
