@@ -35,14 +35,15 @@ import org.xmlpull.v1.XmlPullParser;
 public class CategoryActivity extends Activity {
     public static final String HOST = "http://222.214.218.237:8059/MobileService.asmx/";
     public static String strCookies;
-    private ListView treeListView;
     public static ArrayList<Element> elements;
     public static ArrayList<Element> elementsData;
     public static TreeViewAdapter treeViewAdapter;
-    private String strUserID;
-
     static private VideoInfo videoInfoA = null;
     static private VideoInfo videoInfoB = null;
+    static private int videoCount = 0;	
+
+    private String strUserID;
+    private ListView treeListView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,26 +76,44 @@ public class CategoryActivity extends Activity {
         btnPlay.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(CategoryActivity.this, SDLActivity.class);
-                String strVideoURL = "222.214.218.237,6601";
-                if (videoInfoA.strVehID != null && videoInfoA.strChaID != null) {
-                    strVideoURL += "," + videoInfoA.strVehID + "," + videoInfoA.strChaID;
-                }
-                if (videoInfoB.strVehID != null && videoInfoB.strChaID != null) {
-                    strVideoURL += "," + videoInfoB.strVehID + "," + videoInfoB.strChaID;
+                if (videoInfoA != null) {
+		      videoCount++;			
+                    String strRequestURL = HOST + "GetVehicleByID?ID=" + videoInfoA.strVehID;
+                    DeviceInfoRequest deviceInfoRequest = new VehicleInfoRequest();
+                    deviceInfoRequest.execute(strRequestURL);
                 }
 
-                intent.putExtra("videoUrl", strVideoURL);
-                startActivity(intent);
+		  if (videoInfoB != null) {
+		      videoCount++;	
+		      String strRequestURL = HOST + "GetVehicleByID?ID=" + videoInfoB.strVehID;
+                    DeviceInfoRequest deviceInfoRequest = new VehicleInfoRequest();
+                    deviceInfoRequest.execute(strRequestURL);
+                }
             }
         });
     }
 
+    @override
+    protected void onResume() {
+        videoCount = 0;
+	 if (videoInfoA != null) {
+	     videoInfoA.strDevID = null;
+	 }	
+
+	 if (videoInfoB != null) {
+	     videoInfoB.strDevID = null;
+	 }
+
+        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+    }
+
     private void init() {
-        /*elements = new ArrayList<Element>();
+        elements = new ArrayList<Element>();
         elementsData = new ArrayList<Element>();
         Element e1 = new Element("1", Element.TOP_LEVEL, "0", Element.NO_PARENT, true, false);
-        Element e2 = new Element("2", Element.TOP_LEVEL + 1, 1, e1.getId(), true, false);
+        /*Element e2 = new Element("2", Element.TOP_LEVEL + 1, 1, e1.getId(), true, false);
         Element e3 = new Element("3", Element.TOP_LEVEL + 2, 2, e2.getId(), true, false);
         Element e4 = new Element("4", Element.TOP_LEVEL + 3, 3, e3.getId(), false, false);
 
@@ -102,18 +121,18 @@ public class CategoryActivity extends Activity {
         Element e6 = new Element("6", Element.TOP_LEVEL + 2, 5, e5.getId(), true, false);
         Element e7 = new Element("7", Element.TOP_LEVEL + 3, 6, e6.getId(), false, false);
 
-        Element e8 = new Element("8", Element.TOP_LEVEL + 1, 7, e1.getId(), false, false);
+        Element e8 = new Element("8", Element.TOP_LEVEL + 1, 7, e1.getId(), false, false);*/
 
-        Element e9 = new Element("9", Element.TOP_LEVEL, 8, Element.NO_PARENT, true, false);
-        Element e10 = new Element("10", Element.TOP_LEVEL + 1, 9, e9.getId(), true, false);
+        Element e9 = new Element("9", Element.TOP_LEVEL, "8", Element.NO_PARENT, true, false);
+        /*Element e10 = new Element("10", Element.TOP_LEVEL + 1, 9, e9.getId(), true, false);
         Element e11 = new Element("11", Element.TOP_LEVEL + 2, 10, e10.getId(), true, false);
         Element e12 = new Element("12", Element.TOP_LEVEL + 3, 11, e11.getId(), true, false);
-        Element e13 = new Element("13", Element.TOP_LEVEL + 4, 12, e12.getId(), false, false);
+        Element e13 = new Element("13", Element.TOP_LEVEL + 4, 12, e12.getId(), false, false);*/
 
         elements.add(e1);
         elements.add(e9);
 
-        elementsData.add(e1);
+        /*elementsData.add(e1);
         elementsData.add(e2);
         elementsData.add(e3);
         elementsData.add(e4);
@@ -203,8 +222,9 @@ public class CategoryActivity extends Activity {
     }
 
     static class VideoInfo {
-        public String strVehID;
-        public String strChaID;
+        public String strVehID = null;
+        public String strChaID = null;
+	 public String strDevID = null;
     }
 }
     class UserInfoRequest extends AsyncTask<String, Integer, String> {
@@ -305,3 +325,48 @@ public class CategoryActivity extends Activity {
             }
         }
     }
+
+    class DeviceInfoRequest extends AsyncTask<String, Integer, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            return CategoryActivity.InvokeService(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            try {
+                    JSONTokener jsonParser = new JSONTokener(result);
+                    JSONObject jsonObject = (JSONObject) jsonParser.nextValue();
+		      String strID = jsonObject.getString("ID");			
+                    String strDevID = jsonObject.getString("DevID");
+		      if (CategoryActivity.videoInfoA.strVehID.equlse(strID) && CategoryActivity.videoInfoA.strDevID == null) {
+		          CategoryActivity.videoInfoA.strDevID = strDevID;
+			   CategoryActivity.videoCount--; 	  
+		      }
+		      if (CategoryActivity.videoInfoB.strVehID.equlse(strID) && CategoryActivity.videoInfoB.strDevID == null) {
+		          CategoryActivity.videoInfoB.strDevID = strDevID;
+			   CategoryActivity.videoCount--; 	  
+		      }	  	
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+                CategoryActivity.treeViewAdapter.notifyDataSetChanged();
+            } finally {
+                if (CategoryActivity.videoCount == 0) {
+                    Intent intent = new Intent(CategoryActivity.this, SDLActivity.class);
+                    String strVideoURL = "222.214.218.237,6601";
+                    if (videoInfoA.strDevID != null && videoInfoA.strChaID != null) {
+                        strVideoURL += "," + videoInfoA.strDevID + "," + videoInfoA.strChaID;
+                    }
+                    if (videoInfoB.strDevID != null && videoInfoB.strChaID != null) {
+                        strVideoURL += "," + videoInfoB.strDevID + "," + videoInfoB.strChaID;
+                    }
+
+                    intent.putExtra("videoUrl", strVideoURL);
+                    startActivity(intent);	
+                }
+            }	
+        }
+    }
+

@@ -59,6 +59,13 @@ public class LoginActivity extends Activity {
         });
     }
 
+    @override
+    protected void onResume() {
+        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+    }
+
     class LoginRequest extends AsyncTask<String, Integer, String> {
         @Override
         protected void onPreExecute() {

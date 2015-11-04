@@ -108,6 +108,10 @@ public class SDLActivity extends Activity {
     protected void onResume() {
         Log.v("SDL", "onResume()");
         super.onResume();
+
+        if(getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }	
         SDLActivity.handleResume();
     }
 
