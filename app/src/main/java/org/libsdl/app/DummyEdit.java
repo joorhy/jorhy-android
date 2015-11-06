@@ -1,5 +1,11 @@
 package org.libsdl.app;
 
+import android.content.Context;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+
 /* This is a fake invisible editor view that receives the input and defines the
  * pan&scan region
  */

@@ -1,13 +1,32 @@
 package org.libsdl.app;
 
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Build;
+import android.util.Log;
+import android.view.Display;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.WindowManager;
+
 /**
     SDLSurface. This is what we draw on, so we need to know when it's created
     in order to do anything useful. 
 
     Because of this, that's where we set up the SDL thread
 */
-class SDLSurface extends SurfaceView implements SurfaceHolder.Callback, 
-    View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
+class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
+    View.OnKeyListener, View.OnTouchListener, SensorEventListener {
 
     // Sensors
     protected static SensorManager mSensorManager;

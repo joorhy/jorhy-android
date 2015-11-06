@@ -1,5 +1,13 @@
 package org.libsdl.app;
 
+import android.view.InputDevice;
+import android.view.MotionEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 /* Actual joystick functionality available for API >= 12 devices */
 class SDLJoystickHandler_API12 extends SDLJoystickHandler {
   

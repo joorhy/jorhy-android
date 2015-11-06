@@ -358,10 +358,14 @@ public class CategoryActivity extends Activity {
                 if (CategoryActivity.videoCount == 0) {
                     Intent intent = new Intent(CategoryActivity.this, SDLActivity.class);
                     String strVideoURL = "222.214.218.237,6601";
-                    if (CategoryActivity.videoInfoA.strDevID != null && CategoryActivity.videoInfoA.strChaID != null) {
+                    if (CategoryActivity.videoInfoA != null &&
+                            CategoryActivity.videoInfoA.strDevID != null &&
+                            CategoryActivity.videoInfoA.strChaID != null) {
                         strVideoURL += "," + CategoryActivity.videoInfoA.strDevID + "," + CategoryActivity.videoInfoA.strChaID;
                     }
-                    if (CategoryActivity.videoInfoB.strDevID != null && CategoryActivity.videoInfoB.strChaID != null) {
+                    if (CategoryActivity.videoInfoB != null &&
+                            CategoryActivity.videoInfoB.strDevID != null &&
+                            CategoryActivity.videoInfoB.strChaID != null) {
                         strVideoURL += "," + CategoryActivity.videoInfoB.strDevID + "," + CategoryActivity.videoInfoB.strChaID;
                     }
 
