@@ -8,6 +8,7 @@
     <string name="login_label_sign_in">登陆</string>
     <string name="play">播放</string>
     <string name="pause">暂停</string>
+    <string name="grab">抓图</string>
     <string name="action_settings">Settings</string>
 
 </resources>

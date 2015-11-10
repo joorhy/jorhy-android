@@ -82,7 +82,8 @@ public class SDLActivity extends Activity {
         mSingleton = this;
 
         // Set up the surface
-        mSurface = new SDLSurface(getApplication());
+        //mSurface = new SDLSurface(getApplication());
+        mSurface = (SDLSurface) findViewById(R.id.sdl_surface);
         
         if(Build.VERSION.SDK_INT >= 12) {
             mJoystickHandler = new SDLJoystickHandler_API12();
@@ -91,10 +92,11 @@ public class SDLActivity extends Activity {
             mJoystickHandler = new SDLJoystickHandler();
         }
 
-        mLayout = new AbsoluteLayout(this);
-        mLayout.addView(mSurface);
+        //mLayout = new AbsoluteLayout(this);
+        //mLayout.addView(mSurface);
 
-        setContentView(mLayout);
+        //setContentView(mLayout);
+        setContentView(findViewById(R.layout.activity_player));
     }
 
     // Events
@@ -291,23 +293,19 @@ public class SDLActivity extends Activity {
     public static native void onNativeResize(int x, int y, int format);
     public static native int onNativePadDown(int device_id, int keycode);
     public static native int onNativePadUp(int device_id, int keycode);
-    public static native void onNativeJoy(int device_id, int axis,
-                                          float value);
-    public static native void onNativeHat(int device_id, int hat_id,
-                                          int x, int y);
+    public static native void onNativeJoy(int device_id, int axis,float value);
+    public static native void onNativeHat(int device_id, int hat_id,int x, int y);
     public static native void onNativeKeyDown(int keycode);
     public static native void onNativeKeyUp(int keycode);
     public static native void onNativeKeyboardFocusLost();
-    public static native void onNativeTouch(int touchDevId, int pointerFingerId,
-                                            int action, float x, 
-                                            float y, float p);
+    public static native void onNativeTouch(int touchDevId, int pointerFingerId,int action,
+                                            float x, float y, float p);
     public static native void onNativeAccel(float x, float y, float z);
     public static native void onNativeSurfaceChanged();
     public static native void onNativeSurfaceDestroyed();
     public static native void nativeFlipBuffers();
-    public static native int nativeAddJoystick(int device_id, String name, 
-                                               int is_accelerometer, int nbuttons, 
-                                               int naxes, int nhats, int nballs);
+    public static native int nativeAddJoystick(int device_id, String name, int is_accelerometer,
+                                               int nbuttons,int naxes, int nhats, int nballs);
     public static native int nativeRemoveJoystick(int device_id);
 
     public static void flipBuffers() {

@@ -2,6 +2,8 @@ package org.libsdl.app;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -28,6 +30,14 @@ import android.view.WindowManager;
 class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     View.OnKeyListener, View.OnTouchListener, SensorEventListener {
 
+    public static String notice = "自定义SurfaceView";
+    private int x = 30, y = 80, move_x = 2;
+
+    // SurfaceHolder
+    private SurfaceHolder sfh;
+    private Canvas canvas;
+    private Paint paint;
+
     // Sensors
     protected static SensorManager mSensorManager;
     protected static Display mDisplay;
@@ -38,6 +48,11 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     // Startup    
     public SDLSurface(Context context) {
         super(context);
+
+        paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setTextSize(20);
+
         getHolder().addCallback(this); 
     
         setFocusable(true);
@@ -153,7 +168,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
             }
             // Set up a listener thread to catch when the native thread ends
-            new Thread(new Runnable(){
+            new Thread(new Runnable() {
                 @Override
                 public void run(){
                     try {
@@ -173,7 +188,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
     // unused
     @Override
-    public void onDraw(Canvas canvas) {}
+    public void onDraw(Canvas canvas) {
+        canvas.drawColor(Color.WHITE);
+        canvas.drawText(notice, x, y, paint);
+    }
 
 
     // Key events
