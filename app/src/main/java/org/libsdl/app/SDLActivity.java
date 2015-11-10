@@ -1,5 +1,7 @@
 package org.libsdl.app;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,6 +11,7 @@ import java.util.List;
 import android.app.*;
 import android.content.*;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
 import android.view.*;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
@@ -20,6 +23,8 @@ import android.util.Log;
 import android.graphics.*;
 import android.media.*;
 import android.hardware.*;
+import android.widget.Button;
+import android.widget.LinearLayout;
 
 
 /**
@@ -35,8 +40,9 @@ public class SDLActivity extends Activity {
     // Main components
     protected static SDLActivity mSingleton;
     protected static SDLSurface mSurface;
+    protected static Button mButton;
     protected static View mTextEdit;
-    protected static ViewGroup mLayout;
+    protected static LinearLayout mLayout;
     protected static SDLJoystickHandler mJoystickHandler;
 
     // This is what SDL runs in. It invokes SDL_main(), eventually
@@ -44,6 +50,7 @@ public class SDLActivity extends Activity {
     protected static String mVideoUrl;
     // Audio
     protected static AudioTrack mAudioTrack;
+    protected static Uri mUri;
 
     // Load the .so
     static {
@@ -82,8 +89,33 @@ public class SDLActivity extends Activity {
         mSingleton = this;
 
         // Set up the surface
-        //mSurface = new SDLSurface(getApplication());
-        mSurface = (SDLSurface) findViewById(R.id.sdl_surface);
+        mSurface = new SDLSurface(getApplication());
+        mButton = new Button(getApplication());
+        mUri = RingtoneManager.getActualDefaultRingtoneUri(getApplication(),
+                RingtoneManager.TYPE_NOTIFICATION);
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaPlayer mMediaPlayer = MediaPlayer.create(getApplication(), Uri.parse("file:///system/media/audio/ui/camera_click.ogg"));
+                mMediaPlayer.setLooping(true);
+                try {
+                    mMediaPlayer.prepare();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mMediaPlayer.start();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    mMediaPlayer.stop();
+                }
+            }
+        });
         
         if(Build.VERSION.SDK_INT >= 12) {
             mJoystickHandler = new SDLJoystickHandler_API12();
@@ -92,11 +124,27 @@ public class SDLActivity extends Activity {
             mJoystickHandler = new SDLJoystickHandler();
         }
 
-        //mLayout = new AbsoluteLayout(this);
-        //mLayout.addView(mSurface);
+        //mSurface.setBackgroundColor(Color.YELLOW);
 
-        //setContentView(mLayout);
-        setContentView(findViewById(R.layout.activity_player));
+        int screenWidth  = getWindowManager().getDefaultDisplay().getWidth();       // 屏幕宽（像素，如：480px）
+        int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+
+        //ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(480, 700);
+        //mSurface.setLayoutParams(lp);
+        //ViewGroup.LayoutParams lpBtn = new ViewGroup.LayoutParams(480, 80);
+        //mButton.setLayoutParams(lpBtn);
+        mSurface.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 0.95f));
+        mButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 0.05f));
+        mButton.setBackgroundResource(R.drawable.login_bg);
+        mButton.setText("抓图");
+
+        mLayout = new LinearLayout(this);
+        mLayout.setOrientation(LinearLayout.VERTICAL);
+        mLayout.addView(mSurface);
+        mLayout.addView(mButton);
+        setContentView(mLayout);
     }
 
     // Events

@@ -29,10 +29,6 @@ import android.view.WindowManager;
 */
 class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     View.OnKeyListener, View.OnTouchListener, SensorEventListener {
-
-    public static String notice = "自定义SurfaceView";
-    private int x = 30, y = 80, move_x = 2;
-
     // SurfaceHolder
     private SurfaceHolder sfh;
     private Canvas canvas;
@@ -189,8 +185,8 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     // unused
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.drawColor(Color.WHITE);
-        canvas.drawText(notice, x, y, paint);
+        //canvas.drawColor(Color.WHITE);
+        //canvas.drawText("hello", 0, 0, paint);
     }
 
 
