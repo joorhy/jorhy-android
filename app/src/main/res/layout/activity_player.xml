@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/login_bg_div"
+    android:id= "@+id/player" >
+
+    <org.libsdl.app.SDLSurface
+        android:id="@+id/sdl_surface"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/login_bg_div"
+        android:layout_weight="0.98" />
+
+    <!--org.libsdl.app.SDLSurface
+        android:id="@+id/sdl_surface2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#FF0000"
+        android:layout_weight="0.49" /-->
+
+    <Button
+        android:id="@+id/btn_grab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.02"
+        android:background="@drawable/login_bg"
+        android:text="@string/grab" />
+
+</TableLayout>
