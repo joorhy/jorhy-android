@@ -29,10 +29,9 @@ import android.view.WindowManager;
 */
 class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     View.OnKeyListener, View.OnTouchListener, SensorEventListener {
-    // SurfaceHolder
-    private SurfaceHolder sfh;
-    private Canvas canvas;
-    private Paint paint;
+    // Double click
+    private long firstClick;
+    private int count;
 
     // Sensors
     protected static SensorManager mSensorManager;
@@ -45,9 +44,8 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     public SDLSurface(Context context) {
         super(context);
 
-        paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setTextSize(20);
+        firstClick = 0;
+        count = 0;
 
         getHolder().addCallback(this); 
     
@@ -247,7 +245,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                     SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
                 }
                 break;
-            
+
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_DOWN:
                 // Primary pointer up/down, the index is always zero
@@ -264,6 +262,17 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                 y = event.getY(i) / mHeight;
                 p = event.getPressure(i);
                 SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
+                if (MotionEvent.ACTION_POINTER_DOWN == action) {
+                    if (firstClick != 0 && System.currentTimeMillis() - firstClick > 300) {
+                        count = 0;
+                    }
+                    count++;
+                    if (count == 1) {
+                        firstClick = System.currentTimeMillis();
+                    } else if (count == 2) {
+                        SDLActivity.nativeDoubleClick(x, y);
+                    }
+                }
                 break;
             
             default:

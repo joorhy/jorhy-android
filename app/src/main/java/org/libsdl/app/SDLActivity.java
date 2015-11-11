@@ -1,5 +1,7 @@
 package org.libsdl.app;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ import android.graphics.*;
 import android.media.*;
 import android.hardware.*;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 
@@ -96,7 +99,8 @@ public class SDLActivity extends Activity {
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaPlayer mMediaPlayer = MediaPlayer.create(getApplication(), Uri.parse("file:///system/media/audio/ui/camera_click.ogg"));
+                MediaPlayer mMediaPlayer = MediaPlayer.create(getApplication(),
+                        Uri.parse("file:///system/media/audio/ui/camera_click.ogg"));
                 mMediaPlayer.setLooping(true);
                 try {
                     mMediaPlayer.prepare();
@@ -105,10 +109,12 @@ public class SDLActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 mMediaPlayer.start();
                 try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
+                    videoSnapshot(mSurface, "test");
+                    Thread.sleep(50);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 finally {
@@ -227,6 +233,43 @@ public class SDLActivity extends Activity {
         return super.dispatchKeyEvent(event);
     }
 
+    public void videoSnapshot(View view, String fileName) throws Exception {
+        view.setDrawingCacheEnabled(true);
+        view.buildDrawingCache();
+        //上面2行必须加入，如果不加如view.getDrawingCache()返回null
+        Bitmap bitmap = view.getDrawingCache();
+        FileOutputStream fos = null;
+        try {
+            //判断sd卡是否存在
+            boolean sdCardExist = Environment.getExternalStorageState()
+                    .equals(android.os.Environment.MEDIA_MOUNTED);
+            if(sdCardExist){
+                //获取sdcard的根目录
+                String sdPath = Environment.getExternalStorageDirectory().getPath();
+
+                //创建程序自己创建的文件夹
+                File tempFile= new File(sdPath+File.separator +fileName);
+                if(!tempFile.exists()){
+                    tempFile.mkdirs();
+                }
+                //创建图片文件
+                File file = new File(sdPath + File.separator+fileName+File.separator+ "screen" + ".png");
+                if(!file.exists()){
+                    file.createNewFile();
+                }
+
+                ImageView image = new ImageView(getApplication());
+                image.setImageBitmap(bitmap);
+                fos = new FileOutputStream(file);
+                if (fos != null) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    fos.close();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "cause for "+e.getMessage());
+        }
+    }
     /** Called by onPause or surfaceDestroyed. Even if surfaceDestroyed
      *  is the first to be called, mIsSurfaceReady should still be set
      *  to 'true' during the call to onPause (in a usual scenario).
@@ -334,6 +377,9 @@ public class SDLActivity extends Activity {
     public static native void nativeStartPlay();
     public static native void nativeStopPlay();
     public static native void nativeExitPlay();
+    public static native void nativeDoubleClick(float x, float y);
+    public static native void nativeSnapshot();
+
     public static native void nativeLowMemory();
     public static native void nativeQuit();
     public static native void nativePause();
