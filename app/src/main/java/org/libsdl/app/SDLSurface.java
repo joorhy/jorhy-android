@@ -262,7 +262,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                 y = event.getY(i) / mHeight;
                 p = event.getPressure(i);
                 SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
-                if (MotionEvent.ACTION_POINTER_DOWN == action) {
+                if (MotionEvent.ACTION_DOWN == action) {
                     if (firstClick != 0 && System.currentTimeMillis() - firstClick > 300) {
                         count = 0;
                     }
