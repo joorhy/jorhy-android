@@ -112,7 +112,8 @@ public class SDLActivity extends Activity {
 
                 mMediaPlayer.start();
                 try {
-                    videoSnapshot(mSurface, "test");
+                    //videoSnapshot(mSurface, "/mnt/sdcard/test.png");
+                    nativeSnapshot("/mnt/sdcard/test.png");
                     Thread.sleep(50);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -378,7 +379,7 @@ public class SDLActivity extends Activity {
     public static native void nativeStopPlay();
     public static native void nativeExitPlay();
     public static native void nativeDoubleClick(float x, float y);
-    public static native void nativeSnapshot();
+    public static native void nativeSnapshot(String parm);
 
     public static native void nativeLowMemory();
     public static native void nativeQuit();
