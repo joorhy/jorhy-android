@@ -112,11 +112,14 @@ public class SDLActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                mMediaPlayer.start();
                 try {
+                    mMediaPlayer.start();
+                    Thread.sleep(50);
+                    mMediaPlayer.stop();
+
                     videoSnapshot();
                     //nativeSnapshot("/mnt/sdcard/test.png");
-                    Thread.sleep(50);
+                    //Thread.sleep(20);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -248,7 +251,7 @@ public class SDLActivity extends Activity {
                     tempFile.mkdirs();
                 }
 
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
                 Date curDate = new Date(System.currentTimeMillis());
                 String strFileName = sdPath + File.separator + "video_capture" +
                         File.separator +  formatter.format(curDate) + ".png";
