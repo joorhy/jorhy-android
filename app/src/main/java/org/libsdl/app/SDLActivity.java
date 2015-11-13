@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import android.app.*;
@@ -112,8 +114,8 @@ public class SDLActivity extends Activity {
 
                 mMediaPlayer.start();
                 try {
-                    //videoSnapshot(mSurface, "/mnt/sdcard/test.png");
-                    nativeSnapshot("/mnt/sdcard/test.png");
+                    videoSnapshot();
+                    //nativeSnapshot("/mnt/sdcard/test.png");
                     Thread.sleep(50);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -234,38 +236,24 @@ public class SDLActivity extends Activity {
         return super.dispatchKeyEvent(event);
     }
 
-    public void videoSnapshot(View view, String fileName) throws Exception {
-        view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache();
-        //上面2行必须加入，如果不加如view.getDrawingCache()返回null
-        Bitmap bitmap = view.getDrawingCache();
-        FileOutputStream fos = null;
+    public void videoSnapshot() throws Exception {
         try {
-            //判断sd卡是否存在
             boolean sdCardExist = Environment.getExternalStorageState()
                     .equals(android.os.Environment.MEDIA_MOUNTED);
             if(sdCardExist){
-                //获取sdcard的根目录
                 String sdPath = Environment.getExternalStorageDirectory().getPath();
 
-                //创建程序自己创建的文件夹
-                File tempFile= new File(sdPath+File.separator +fileName);
+                File tempFile= new File(sdPath + File.separator + "video_capture");
                 if(!tempFile.exists()){
                     tempFile.mkdirs();
                 }
-                //创建图片文件
-                File file = new File(sdPath + File.separator+fileName+File.separator+ "screen" + ".png");
-                if(!file.exists()){
-                    file.createNewFile();
-                }
 
-                ImageView image = new ImageView(getApplication());
-                image.setImageBitmap(bitmap);
-                fos = new FileOutputStream(file);
-                if (fos != null) {
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                    fos.close();
-                }
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+                Date curDate = new Date(System.currentTimeMillis());
+                String strFileName = sdPath + File.separator + "video_capture" +
+                        File.separator +  formatter.format(curDate) + ".png";
+
+                nativeSnapshot(strFileName);
             }
         } catch (Exception e) {
             Log.e(TAG, "cause for "+e.getMessage());
